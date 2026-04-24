@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
-
+from typing import Any
+from pydantic import BaseModel
+from datetime import datetime
 
 class CalculationInput(BaseModel):
     length: float = Field(..., gt=0)
@@ -16,3 +18,10 @@ class CalculationResponse(BaseModel):
     wall_area_with_reserve: float
     paint_liters: float
     tile_required_sqm: float
+
+class CalculationHistoryResponse(BaseModel):
+    id: int
+    calculation_type: str
+    input_data: dict[str, Any]
+    result_data: dict[str, Any]
+    created_at: datetime
