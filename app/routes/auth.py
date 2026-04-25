@@ -7,7 +7,7 @@ from app.utils import utils
 from app.models.users import Users
 from app.oauth2 import create_acces_token
 
-router = APIRouter(tags="Auth")
+router = APIRouter(tags=["Auth"])
 
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -16,7 +16,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credential")
     
-    if not utils.verify(form_data.password, user.password):
+    if not utils.verify(form_data.password, user.hashed_password):
         raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Invalid credentials"
