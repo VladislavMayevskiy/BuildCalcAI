@@ -7,6 +7,8 @@ from app.models.room import Room
 from app.models.users import Users
 from app import oauth2
 from app.schemas.Room import RoomCreate,RoomResponse,RoomUpdate
+from app.services.calculation_service import calculate_room
+from app.models.calculation_history import Calculation
 
 
 router = APIRouter(prefix="/rooms", tags=["Room"])
@@ -54,3 +56,38 @@ def delete_room(room_id: int , db: Session = Depends(get_db), current_user: User
     db.delete(room)
     db.commit()
     return
+
+
+@router.post("/{room_id}/calculate", status_code=status.HTTP_200_OK, response_model=CalculationResponse)
+def calculate_saved_room(room_id: int, db: Session = Depends(get_db), current_user: Users = Depends(oauth2.get_current_user)):
+    room = db.query(Room).filter(Room.id == room_id, Room.user_id == current_user.id).first()
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    input_data = CalculationInput(
+    length=room.length,
+    width=room.width,
+    height=room.height,
+    windows_area=room.windows_area,
+    doors_area=room.doors_area
+    )
+    calculation = calculate_room(input_data)
+    calculation_record = Calculation(
+        user_id = current_user.id,
+        room_project_id = room_id,
+        calculation_type = "room_calculation",
+        input_data = input_data.model_dump(),
+        result_data = calculation.model_dump()   
+
+    )
+    db.add(calculation_record)
+    db.commit()
+    return calculation
+
+@router.get("/{room_id}/calculations", status_code=status.HTTP_200_OK, response_model=list[CalculationHistoryResponse])
+def get_calculations_room(room_id: int, db: Session = Depends(get_db), current_user: Users = Depends(oauth2.get_current_user)):
+    room = db.query(Room).filter(Room.id == room_id, Room.user_id == current_user.id).first()
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)  
+    calculations = db.query(Calculation).filter(Calculation.room_project_id == room_id, Calculation.user_id == current_user.id).all()
+
+    return calculations
