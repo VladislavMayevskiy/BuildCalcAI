@@ -8,6 +8,7 @@ from app.database import Base
 from app.models.calculation_history import Calculation
 from app.models.room import Room
 from app.models.users import Users
+from app.models.ai_request import AIRequestLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

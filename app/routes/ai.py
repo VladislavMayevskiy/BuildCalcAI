@@ -30,7 +30,11 @@ Input room data:
 Calculation result:
 {calculation.result_data}
 """
-    explanation = generate_ai_response(prompt)
+    
+    try:
+        explanation = generate_ai_response(prompt)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AI service is temporarily unavailable")
     return {
         "calculation_id": calculation.id,
         "explanation": explanation
