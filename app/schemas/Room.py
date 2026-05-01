@@ -42,7 +42,7 @@ class RoomResponse(BaseModel):
     doors_area: float
     windows_area: float
 
-    room_type: Optional[str]
+    room_type: str = "default"
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

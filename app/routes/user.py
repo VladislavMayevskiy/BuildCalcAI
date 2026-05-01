@@ -9,7 +9,7 @@ router = APIRouter(prefix="/users", tags=["User"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 def create_user(user: UserCreate ,db: Session = Depends(get_db)):
-    existing_user = db.query(Users).filter(user.email == Users.email).first()
+    existing_user = db.query(Users).filter(Users.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
