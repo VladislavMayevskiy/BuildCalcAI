@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import oauth2
 from app.models.users import Users
+from app.models.ai_chat import AIChat
 from app.models.calculation_history import Calculation
-from app.schemas.ai import AIExplanationResponse, AIRequestLogResponse
+from app.schemas.ai import AIExplanationResponse, AIRequestLogResponse, AIChatResponse, AIRequest, AIResponse
 from app.services.openai_service import generate_ai_response
 from app.models.ai_request_log import AIRequestLog
 from app.services.ai_prompt_service import build_calculation_explanation_prompt
@@ -62,3 +63,47 @@ def get_ai_log(log_id: int ,db: Session = Depends(get_db),current_user: Users = 
     if not log:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log not found")  
     return log
+
+
+@router.get("/chat/logs", response_model=list[AIChatResponse])
+def get_ai_chat_logs(db: Session = Depends(get_db),current_user: Users = Depends(oauth2.get_current_user)):
+    logs = db.query(AIChat).filter(AIChat.user_id == current_user.id).order_by(AIChat.created_at.desc()).all()   
+    return logs
+
+@router.get("/chat/logs/{log_id}", response_model=AIChatResponse)
+def get_ai_chat_log(log_id: int ,db: Session = Depends(get_db),current_user: Users = Depends(oauth2.get_current_user)):
+    log = db.query(AIChat).filter(AIChat.user_id == current_user.id, AIChat.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat log not found")  
+    return log
+
+
+@router.post("/chat", response_model=AIResponse)
+def ai_chat(request: AIRequest,db: Session = Depends(get_db) ,current_user: Users = Depends(oauth2.get_current_user)):
+    
+    try:
+        response = generate_ai_response(request.prompt)
+        log = AIChat(
+            user_id = current_user.id,
+            prompt = request.prompt,
+            response = response,
+            error_message=None,
+            status = "success"
+        )
+        db.add(log)
+        db.commit()
+
+    except Exception as error:
+        log = AIChat(
+            user_id = current_user.id,
+            prompt = request.prompt,
+            response = None,
+            error_message=str(error),
+            status = "error"
+        )
+        db.add(log)
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AI service is temporarily unavailable")
+    return {
+        "response": response
+    }
