@@ -32,3 +32,4 @@ def test_calculate_strip_foundation_with_zero_reserve():
     assert result.perimeter == 36
     assert result.concrete_volume == 8.64
     assert result.concrete_volume_with_reserve == 8.64
+

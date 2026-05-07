@@ -15,3 +15,4 @@ def test_calculate_room_floor_and_ceiling_area():
 
     assert result.floor_area == 20
     assert result.ceiling_area == 20
+

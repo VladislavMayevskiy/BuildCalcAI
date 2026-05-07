@@ -116,3 +116,4 @@ def test_calculate_room_v2_returns_warning_when_openings_are_too_large():
     assert len(result.warnings) == 1
     assert result.warnings[0].code == "large_openings_area"
     assert result.warnings[0].severity == "warning"
+
